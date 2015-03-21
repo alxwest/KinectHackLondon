@@ -33,15 +33,15 @@
             
             <StackPanel  Margin="0 0 15 15" Width="300" Background="#f0f0f0" HorizontalAlignment="Right" Grid.Column="2" Grid.Row="1" >
                 <TextBlock Text="Settings"  Padding="10" Background="#ccc" />
-                <TextBlock Text="Min Distance" Padding="10"/>
+                <TextBlock Text="Colour Range" Padding="10"/>
                 <StackPanel  Orientation="Horizontal">
-                    <Slider Width="250"  Minimum="300" Value="600"  Maximum="900" TickFrequency="1" IsSnapToTickEnabled="True" Interval="1" Margin="5"  x:Name="sliderMin" Padding="10"/>
-                    <TextBlock Text="{Binding Value, ElementName=sliderMin}" VerticalAlignment="Center" />
+                    <Slider Width="250"  Minimum="0" Value="5"  Maximum="400" TickFrequency="1" IsSnapToTickEnabled="True" Interval="1" Margin="5"  x:Name="sliderColorRange" Padding="10"/>
+                    <TextBlock Text="{Binding Value, ElementName=sliderColorRange}" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <TextBlock Text="Max Distance" Padding="10"/>
                 <StackPanel Orientation="Horizontal">
-                    <Slider Width="250" Minimum="900" Value="900" Maximum="6000" Margin="5" x:Name="sliderMax" Padding="10"/>
+                    <Slider Width="250" Minimum="0" Value="1000" Maximum="6000" Margin="5" x:Name="sliderMax" Padding="10"/>
                     <TextBlock Text="{Binding Value, ElementName=sliderMax}" VerticalAlignment="Center" />
                 </StackPanel>
 

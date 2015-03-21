@@ -98,7 +98,7 @@ namespace KinectWPFOpenCV
 
             var bCw = new BackgroundWorker();
 
-            var sliderMinValue = (int)sliderMin.Value;
+            var colorRange = (int)sliderColorRange.Value;
             var sliderMaxValue = (int)sliderMax.Value;
             var sliderMinSizeValue = sliderMinSize.Value;
             var sliderMaxSizeValue = sliderMaxSize.Value;
@@ -119,8 +119,7 @@ namespace KinectWPFOpenCV
                        //depthBmp = BitmapSource.Create(depthFrame.Width, depthFrame.Height, 96, 96, PixelFormats.Bgr32, null, greyPixels, depthFrame.Width * 4);
                        colorBmp = BitmapSource.Create(colorFrame.Width, colorFrame.Height, 96, 96, PixelFormats.Bgr32, null, colorPixels, colorFrame.Width * 4);
                        Image<Bgr, Byte> returnImage = new Image<Bgr, byte>(colorBmp.ToBitmap());
-                       //smoothed._GammaCorrect(0.5);
-
+               
                        const int BlueIndex = 0;
                        const int GreenIndex = 1;
                        const int RedIndex = 2;
@@ -145,7 +144,7 @@ namespace KinectWPFOpenCV
                            }
 
                            // Apply the intensity to the color channels
-                           if (depth > 1000)
+                           if (depth > sliderMaxValue)
                            {
                                colorPixels[colorIndex + BlueIndex] = 0; //blue
                                colorPixels[colorIndex + GreenIndex] = 0; //green
@@ -158,6 +157,7 @@ namespace KinectWPFOpenCV
 
                        Image<Hsv, Byte> openCVImg = new Image<Hsv, byte>(colorBmp.ToBitmap());
                        var smoothed = openCVImg.SmoothMedian(7);
+                       //Increase saturation
                        smoothed[1] += 30;
 
                        //Get 10x10 pixel color sample from the nearest point
@@ -175,7 +175,7 @@ namespace KinectWPFOpenCV
                        {
                            var avgColor = channels[0].GetAverage(averageMask);
                            // 3. Remove all pixels from the hue channel that are not in the range [40, 60]
-                           CvInvoke.cvInRangeS(channels[0], new Gray(avgColor.Intensity - 5).MCvScalar, new Gray(avgColor.Intensity + 5).MCvScalar, channels[0]);
+                           CvInvoke.cvInRangeS(channels[0], new Gray(avgColor.Intensity - colorRange).MCvScalar, new Gray(avgColor.Intensity + colorRange).MCvScalar, channels[0]);
 
                            // 4. Display the result
                            theshold = channels[0];
@@ -213,11 +213,13 @@ namespace KinectWPFOpenCV
 
                        //work out if cuboid by tracking point clouds
 
+                       //draw yellow cross on nearest point
                        returnImage.Draw(new Cross2DF(minPoint, 50, 50), new Bgr(System.Drawing.Color.Yellow), 4);
+                       theshold.Draw(new Cross2DF(minPoint, 50, 50), new Gray(255), 4);
 
                        outImg.Dispatcher.BeginInvoke(new Action(() =>
                       {
-                          this.outImg.Source = ImageHelpers.ToBitmapSource(returnImage );
+                          this.outImg.Source = ImageHelpers.ToBitmapSource(theshold );
                           txtBlobCount.Text = string.Format("x:{0}, y:{1}", minPoint.X, minPoint.Y);
                       }));
 
