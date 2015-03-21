@@ -214,12 +214,12 @@ namespace KinectWPFOpenCV
                        //work out if cuboid by tracking point clouds
 
                        //draw yellow cross on nearest point
+                       returnImage = theshold.Convert<Bgr, byte>();
                        returnImage.Draw(new Cross2DF(minPoint, 50, 50), new Bgr(System.Drawing.Color.Yellow), 4);
-                       theshold.Draw(new Cross2DF(minPoint, 50, 50), new Gray(255), 4);
-
+                       
                        outImg.Dispatcher.BeginInvoke(new Action(() =>
                       {
-                          this.outImg.Source = ImageHelpers.ToBitmapSource(theshold );
+                          this.outImg.Source = ImageHelpers.ToBitmapSource(returnImage );
                           txtBlobCount.Text = string.Format("x:{0}, y:{1}", minPoint.X, minPoint.Y);
                       }));
 
