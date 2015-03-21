@@ -96,7 +96,6 @@ namespace KinectWPFOpenCV
 
             blobCount = 0;
 
-            var bDw = new BackgroundWorker();
             var bCw = new BackgroundWorker();
 
             var sliderMinValue = (int)sliderMin.Value;
@@ -104,53 +103,7 @@ namespace KinectWPFOpenCV
             var sliderMinSizeValue = sliderMinSize.Value;
             var sliderMaxSizeValue = sliderMaxSize.Value;
 
-            bDw.DoWork += (s, a) =>
-            {
-
-                using (DepthImageFrame depthFrame = e.OpenDepthImageFrame())
-                {
-                    if (depthFrame != null)
-                    {
-                        BitmapSource depthBmp = null;
-                        blobCount = 0;
-                        depthBmp = depthFrame.SliceDepthImage(sliderMinValue, sliderMaxValue);
-
-                        Image<Bgr, Byte> openCVImg = new Image<Bgr, byte>(depthBmp.ToBitmap());
-
-                        Image<Gray, byte> gray_image = openCVImg.Convert<Gray, byte>();
-
-
-
-                        using (MemStorage stor = new MemStorage())
-                        {
-                            //Find contours with no holes try CV_RETR_EXTERNAL to find holes
-                            Contour<System.Drawing.Point> contours = gray_image.FindContours(
-                             Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_SIMPLE,
-                             Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_EXTERNAL,
-                             stor);
-
-                            for (int i = 0; contours != null; contours = contours.HNext)
-                            {
-                                i++;
-
-                                if ((contours.Area > Math.Pow(sliderMinSizeValue, 2)) && (contours.Area < Math.Pow(sliderMaxSizeValue, 2)))
-                                {
-                                    MCvBox2D box = contours.GetMinAreaRect();
-                                    openCVImg.Draw(box, new Bgr(System.Drawing.Color.Red), 2);
-                                    blobCount++;
-                                }
-                            }
-                        }
-
-                        txtBlobCount.Dispatcher.BeginInvoke(new Action(() =>
-                        {
-                            this.outImg.Source = ImageHelpers.ToBitmapSource(openCVImg);
-                            txtBlobCount.Text = blobCount.ToString();
-                        }));
-                    }
-                }
-            };
-
+            
             bCw.DoWork += (s, a) =>
            {
                using (ColorImageFrame colorFrame = e.OpenColorImageFrame())
@@ -168,11 +121,9 @@ namespace KinectWPFOpenCV
                        Image<Bgr, Byte> returnImage = new Image<Bgr, byte>(colorBmp.ToBitmap());
                        //smoothed._GammaCorrect(0.5);
 
-                       //var harvester = new Service.CombineHarvester();
-
-                       //const int BlueIndex = 0; 
-                       //const int GreenIndex = 1;
-                       //const int RedIndex = 2;
+                       const int BlueIndex = 0;
+                       const int GreenIndex = 1;
+                       const int RedIndex = 2;
 
                        double minDepth = int.MaxValue;
                        System.Drawing.Point minPoint = new System.Drawing.Point();
@@ -193,39 +144,23 @@ namespace KinectWPFOpenCV
                                minPoint = new System.Drawing.Point(x, y);
                            }
 
-                           // Map the distance to an intesity that can be represented in RGB
-                           // var intensity = (depth /4000.00 )* 225;
-
-                           //harvester.Harvest(
-                           //    new Models.Grain(
-                           //        new DepthImagePoint { Depth = depth, X = x, Y = y },
-                           //        System.Drawing.Color.FromArgb(0,
-                           //                colorPixels[colorIndex + RedIndex],
-                           //                colorPixels[colorIndex + GreenIndex],
-                           //                colorPixels[colorIndex + BlueIndex])
-                           //                ));
                            // Apply the intensity to the color channels
                            if (depth > 1000)
                            {
-                               colorPixels[colorIndex + 0] = 0; //blue
-                               colorPixels[colorIndex + 1] = 0; //green
-                               colorPixels[colorIndex + 2] = 0; //red   
+                               colorPixels[colorIndex + BlueIndex] = 0; //blue
+                               colorPixels[colorIndex + GreenIndex] = 0; //green
+                               colorPixels[colorIndex + RedIndex] = 0; //red   
                            }
 
                        }
 
-                       //Get 10x10 pixel color sample from the nearest point
-
-
                        colorBmp = BitmapSource.Create(colorFrame.Width, colorFrame.Height, 96, 96, PixelFormats.Bgr32, null, colorPixels, colorFrame.Width * 4);
-
-
-                       //depthBmp = BitmapSource.Create(depthFrame.Width, colorFrame.Height, 96, 96, PixelFormats.Bgr32, null, depthPixels, colorFrame.Width * 4);
 
                        Image<Hsv, Byte> openCVImg = new Image<Hsv, byte>(colorBmp.ToBitmap());
                        var smoothed = openCVImg.SmoothMedian(7);
                        smoothed[1] += 30;
 
+                       //Get 10x10 pixel color sample from the nearest point
                        Image<Gray, Byte> averageMask = new Image<Gray, byte>(colorFrame.Width, colorFrame.Height, new Gray(0));
                        averageMask.Draw(new System.Drawing.Rectangle(minPoint.X - 5, minPoint.Y - 5, 10, 10), new Gray(255), -1);
 
@@ -282,7 +217,7 @@ namespace KinectWPFOpenCV
 
                        outImg.Dispatcher.BeginInvoke(new Action(() =>
                       {
-                          this.outImg.Source = ImageHelpers.ToBitmapSource(theshold );
+                          this.outImg.Source = ImageHelpers.ToBitmapSource(returnImage );
                           txtBlobCount.Text = string.Format("x:{0}, y:{1}", minPoint.X, minPoint.Y);
                       }));
 
@@ -290,10 +225,7 @@ namespace KinectWPFOpenCV
                }
            };
 
-            //bDw.RunWorkerAsync();
             bCw.RunWorkerAsync();
-
-
         }
 
 
